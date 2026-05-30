@@ -3,6 +3,7 @@ session_start();
 
 $db = new PDO('sqlite:' . __DIR__ . '/db.sqlite');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$db->exec("pragma foreign_keys = on");
 
 $db->exec("
     create table if not exists posts ( 
@@ -11,7 +12,17 @@ $db->exec("
         body text not null,
         created_at text not null default current_timestamp,
         updated_at text not null default current_timestamp
-    )
+    );
+
+    create table if not exists comments (
+        id integer primary key autoincrement,
+        post_id integer not null,
+        author text not null,
+        body text not null,
+        created_at text not null default current_timestamp,
+        updated_at text not null default current_timestamp,
+        foreign key (post_id) references posts(id) on delete cascade
+    );
 ");
 
 function e($value) {
