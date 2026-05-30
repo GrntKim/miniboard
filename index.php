@@ -38,6 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post')) {
+    $id = (int) ($_POST['id'] ?? 0);
+
+    if ($id > 0) {
+        $stmt = $db->prepare("delete from posts where id = :id");
+        $stmt->execute([':id' => $id]);
+    }
+
+    header('Location: ?action=posts');
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -86,6 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        a {
+            display: inline-block;
+            padding: 0.3em 0.4em;
+            border-radius: 5px;
+        }
+
+        a:hover {
+            background-color: #eee;
+            transition-duration: 0.2s;
         }
 
         .content {
@@ -190,6 +212,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                 <p><?= nl2br(e($post['body'])) ?></p>
                 <small><?= e($post['created_at']) ?></small>
                 <p><a href="?action=show">go back</a></p>
+                <form method="post" onsubmit="return confirm('Delete this post?');">
+                    <input type="hidden" name="action" value="delete_post">
+                    <input type="hidden" name="id" value="<?= e($post['id']) ?>">
+                    <button type="submut">Delete</button>
+                </form>
             <?php endif; ?>
 
         <?php else: ?>
