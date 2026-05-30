@@ -17,7 +17,7 @@ function e($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-$action = $_GET['action'] ?? 'home';
+$action = $_GET['action'] ?? 'posts';
 $id = (int) ($_GET['id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create_post') {
@@ -334,9 +334,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                 </div>
             <?php endif; ?>
 
-        <!--Default page-->
-        <?php else: ?>
-            <h1>WELCOME!</h1>
         <?php endif; ?>
     </div>
     <footer>
