@@ -62,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
         crossorigin="anonymous">
     </script>
     <style>
-
         @import url('https://googleapis.com');
 
         * {
@@ -90,16 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
         a {
             text-decoration: none;
             color: black;
-        }
-
-        header {
-            padding: 1em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        a {
             display: inline-block;
             padding: 0.3em 0.4em;
             border-radius: 5px;
@@ -110,9 +99,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
             transition-duration: 0.2s;
         }
 
+        header {
+            padding: 0.5em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid black;
+        }
+
+        header .site-menus a {
+            font-size: large;
+        }
+
         .content {
             padding: 1em;
             flex: 1;
+        }
+
+        .post-container {
+            max-width: 720px;
+            margin: 3em auto;
+            padding: 0 1em;
+            display: block;
+        }
+
+        .post-container h2 {
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 0.4em;
+        }
+
+        .post-container small {
+            display: block;
+            color: #777;
+            margin-bottom: 2em;
+        }
+
+        .post-container p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 1.5em;
+            white-space: pre-wrap;
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75em;
+            margin-top: 2em;
         }
 
         form {
@@ -149,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
             justify-content: center;
             align-items: center;
             padding: 1em;
+            border-top: 1px solid black;
         }
     </style>
     <title>CMS</title>
@@ -157,12 +192,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
     <header>
         <h1 class="site-logo"><a href="/">CMS</a></h1>
         <ul class="site-menus">
-            <li><a href="?action=posts">posts</a></li>
-            <li><a href="?action=write">write</a></li>
-            <li><a href="#">register</a></li>
+            <li><a href="?action=posts">Posts</a></li>
+            <li><a href="?action=write">Write</a></li>
         </ul>
     </header>
     <div class="content">
+        <!--Post writing page-->
         <?php if ($action === 'write'): ?>
             <h2>Write</h2>
             <form method="post">
@@ -177,6 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
                 <button type="submit">Save</button>
             </form>
 
+        <!--Post list page-->
         <?php elseif ($action === 'posts'): ?>
             <h2>Posts</h2>
 
@@ -197,9 +233,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
                 </article>
             <?php endforeach; ?>
         
+        <!--Post detail page-->
         <?php elseif ($action === 'show' && $id > 0): ?>
             <?php
-            $stmt = $db->query("select * from posts where id = :id");
+            $stmt = $db->prepare("select * from posts where id = :id");
             $stmt->execute([':id' => $id]);
             $post = $stmt->fetch(PDO::FETCH_ASSOC);
             ?>
@@ -208,17 +245,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
                 <h2>Post not found</h2>
                 <p><a href="?action=show">go back</a></p>
             <?php else: ?>
-                <h2><?= e($post['title']) ?></h2>
-                <p><?= nl2br(e($post['body'])) ?></p>
-                <small><?= e($post['created_at']) ?></small>
-                <p><a href="?action=show">go back</a></p>
-                <form method="post" onsubmit="return confirm('Delete this post?');">
-                    <input type="hidden" name="action" value="delete_post">
-                    <input type="hidden" name="id" value="<?= e($post['id']) ?>">
-                    <button type="submut">Delete</button>
-                </form>
+                <div class="post-container">
+                    <h2><?= e($post['title']) ?></h2>
+                    <p><?= e($post['body']) ?></p>
+                    <small><?= e($post['created_at']) ?></small>
+                    <div class="post-actions">
+                        <a href="?action=posts">go back</a>
+                        <button
+                            class="post-delete-btn"
+                            data-id="<?= e($post['id']) ?>">
+                            Delete
+                        </button>
+                    </div>
+                </div>
             <?php endif; ?>
 
+        <!--Default page-->
         <?php else: ?>
             <h1>WELCOME!</h1>
         <?php endif; ?>
@@ -227,6 +269,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
         Copyright &copy; <script>document.write(new Date().getFullYear());</script> JMK
     </footer>
     <script>
+        $(document).ready(() => {
+            $(".post-delete-btn").on("click", function () {
+                if (!confirm("Delete this post?")) return;
+
+                $.post("/", {
+                    action: "delete_post",
+                    id: $(this).data("id")
+                }).done(() => {
+                    location.href = "?action=posts";
+                })
+            });
+        });
     </script>
 </body>
 </html>
