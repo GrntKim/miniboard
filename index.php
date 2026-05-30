@@ -32,6 +32,9 @@ function e($value) {
 $action = $_GET['action'] ?? 'posts';
 $id = (int) ($_GET['id'] ?? 0);
 
+/**
+ * posts api logic
+ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create_post') {
     $title = trim($_POST['title'] ?? '');
     $body = trim($_POST['body'] ?? '');
@@ -84,6 +87,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
     header("Location: ?action=show&id=" . $id);
     exit;
 }
+
+/**
+ * comments api logic
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create_comment') {
+    $post_id = (int) ($_POST['post_id'] ?? 0);
+    $body = trim($_POST['body'] ?? '');
+
+    if ($post_id > 0 && $body !== '') {
+        $stmt = $db->prepare("
+            insert into comments (post_id, author, body)
+            values (:post_id, :author, :body)
+        ");
+        $stmt->execute([
+            ':post_id' => $post_id,
+            ':author' => 'anonymous',
+            ':body' => $body,
+        ]);
+
+        header("Location: ?action=show&id=" . $post_id);
+        exit;
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -209,6 +236,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
             min-height: 60vh;
         }
 
+        .post-form .comment-text-area {
+            min-height: 10vh;
+        }
+
         form {
             display: grid;
             gap: 0.75em;
@@ -332,6 +363,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                     </div>
                 </div>
             <?php endif; ?>
+
+            <!--Comment form-->
+            <div class="post-form">
+                <h2>Comments</h2>
+                <form method="post">
+                    <input type="hidden" name="action" value="create_comment">
+                    <input type="hidden" name="post_id" value="<?= e($post['id']) ?>">
+                    <p>
+                        <textarea class="comment-text-area" type="body" name="body" placeholder="Write a comment..."></textarea>
+                    </p>
+                    <button type="submit">Save</button>
+                </form>
+
+            <!--Comment list-->
+            <?php 
+            $stmt = $db->prepare("
+                select * 
+                from comments 
+                where post_id = :post_id
+                order by id desc
+            ");
+            $stmt->execute([':post_id' => $post['id']]);
+            $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            ?>
+
+            <?php if (!$comments): ?>
+                <small>No comments yet...</small>
+            <?php endif; ?>
+
+            <?php foreach ($comments as $comment): ?>
+                <article>
+                    <p><?= e($comment['body']) ?></p>
+                    <small>by <?= e($comment['author']) ?></small>
+                    <small>
+                        Created at: <?= e($comment['created_at']) ?>
+                        <?php if ($comment['created_at'] !== $comment['updated_at']): ?>
+                            | Updated at: <?= e($comment['updated_at']) ?>
+                        <?php endif; ?>
+                    </small>
+                </article>
+            <?php endforeach; ?>
+            </div>
 
         <!--Post update page-->
         <?php elseif ($action === 'update' && $id > 0): ?>
