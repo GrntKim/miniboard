@@ -170,6 +170,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
             margin-top: 2em;
         }
 
+        .post-form {
+            max-width: 720px;
+            margin: 3em auto;
+            padding: 0 1em;
+        }
+
+        .post-form h2 {
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 1em;
+        }
+
+        .post-form form {
+            max-width: none;
+        }
+
+        .post-form input,
+        .post-form textarea {
+            width: 100%;
+        }
+
         form {
             display: grid;
             gap: 0.75em;
@@ -294,19 +315,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                 <h2>Post not found</h2>
                 <p><a href="?action=posts">go back</a></p>
             <?php else: ?>
-                <h2>Update post</h2>
-                <form method="post">
-                    <input type="hidden" name="action" value="update_post">
-                    <input type="hidden" name="id" value="<?= e($post['id']) ?>">
-                    <p>
-                        <input type="text" name="title" value="<?= e($post['title']) ?>">
-                    </p>
-                    <p>
-                        <textarea name="body"><?= e($post['body']) ?></textarea>
-                    </p>
-
-                    <button type="submit">Save</button>
-                </form>
+                <div class="post-form">
+                    <h2>Update post</h2>
+                    <form method="post">
+                        <input type="hidden" name="action" value="update_post">
+                        <input type="hidden" name="id" value="<?= e($post['id']) ?>">
+                        <p>
+                            <input type="text" name="title" value="<?= e($post['title']) ?>">
+                        </p>
+                        <p>
+                            <textarea name="body"><?= e($post['body']) ?></textarea>
+                        </p>
+                        <button type="submit">Save</button>
+                    </form>
+                    <div class="post-actions">
+                        <a href="?action=show&id=<?= e($post['id']) ?>">Cancel</a>
+                    </div>
+                </div>
             <?php endif; ?>
 
         <!--Default page-->
