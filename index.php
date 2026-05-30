@@ -9,7 +9,8 @@ $db->exec("
         id integer primary key autoincrement,
         title text not null,
         body text not null,
-        created_at text not null default current_timestamp
+        created_at text not null default current_timestamp,
+        updated_at text not null default current_timestamp
     )
 ");
 
@@ -58,7 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
     if ($id > 0 && $title !== '' && $body !== '') {
         $stmt = $db->prepare("
             update posts 
-            set title = :title, body = :body
+            set title = :title, 
+                body = :body,
+                updated_at = current_timestamp
             where id = :id
         ");
         $stmt->execute([
@@ -290,7 +293,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                 <div class="post-container">
                     <h2><?= e($post['title']) ?></h2>
                     <p><?= e($post['body']) ?></p>
-                    <small><?= e($post['created_at']) ?></small>
+                    <small>
+                        Created at: <?= e($post['created_at']) ?>
+                        <?php if (e($post['created_at']) !== e($post['updated_at'])): ?>
+                            | Updated at: <?= e($post['updated_at']) ?>
+                        <?php endif; ?>
+                    </small>
                     <div class="post-actions">
                         <a href="?action=posts">Go back</a>
                         <a href="?action=update&id=<?= e($post['id']) ?>">Update</a>
