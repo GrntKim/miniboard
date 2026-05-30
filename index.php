@@ -111,6 +111,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comment')) {
+    $id = (int) ($_POST['id'] ?? 0);
+    $post_id = (int) ($_POST['post_id'] ?? 0);
+
+    if ($id > 0 && $post_id > 0) {
+        $stmt = $db->prepare("
+            delete from comments 
+            where id = :id and post_id = :post_id
+        ");
+        $stmt->execute([
+            ':id' => $id,
+            ':post_id' => $post_id,
+        ]);
+    }
+
+    header("Location: ?action=show&id=" . $post_id);
+    exit;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -195,6 +214,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
             display: block;
             color: #777;
             margin-bottom: 2em;
+        }
+
+        .post-form small {
+            display: block;
+            color: #777;
         }
 
         .post-container p {
@@ -353,7 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                     </small>
                     <div class="post-actions">
                         <a href="?action=posts">Go back</a>
-                        <a href="?action=update&id=<?= e($post['id']) ?>">Update</a>
+                        <a href="?action=update_post&id=<?= e($post['id']) ?>">Update</a>
                         <button
                             class="post-delete-btn"
                             data-id="<?= e($post['id']) ?>"
@@ -402,12 +426,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                             | Updated at: <?= e($comment['updated_at']) ?>
                         <?php endif; ?>
                     </small>
+                    <button
+                        class="comment-delete-btn"
+                        data-id="<?= e($comment['id']) ?>"
+                        data-post-id="<?= e($comment['post_id']) ?>"
+                    >
+                        Delete
+                    </button>
                 </article>
             <?php endforeach; ?>
             </div>
 
         <!--Post update page-->
-        <?php elseif ($action === 'update' && $id > 0): ?>
+        <?php elseif ($action === 'update_post' && $id > 0): ?>
             <?php
             $stmt = $db->prepare("select * from posts where id = :id");
             $stmt->execute([':id' => $id]);
@@ -450,6 +481,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                     id: $(this).data("id"),
                 }).done(() => {
                     location.href = "?action=posts";
+                })
+            });
+
+             $(".comment-delete-btn").on("click", function () {
+                if (!confirm("Delete this comment?")) return;
+
+                $.post("/", {
+                    action: "delete_comment",
+                    id: $(this).data("id"),
+                    post_id: $(this).data("postId"),
+                }).done(() => {
+                    location.href = `?action=show&id=${$(this).data("postId")}`;
                 })
             });
         });
