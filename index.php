@@ -194,6 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
             width: 100%;
         }
 
+        .post-form textarea {
+            min-height: 60vh;
+        }
+
         form {
             display: grid;
             gap: 0.75em;
@@ -245,17 +249,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
         <!--Post writing page-->
         <?php if ($action === 'write'): ?>
             <h2>Write</h2>
-            <form method="post">
-                <input type="hidden" name="action" value="create_post">
-                <p>
-                    <input type="text" name="title" placeholder="title">
-                </p>
-                <p>
-                    <textarea type="body" name="body" placeholder="Content"></textarea>
-                </p>
-
-                <button type="submit">Save</button>
-            </form>
+            <div class="post-form">
+                <form method="post">
+                    <input type="hidden" name="action" value="create_post">
+                    <p>
+                        <input type="text" name="title" placeholder="title">
+                    </p>
+                    <p>
+                        <textarea type="body" name="body" placeholder="Content"></textarea>
+                    </p>
+                    <button type="submit">Save</button>
+                </form>
+            </div>
 
         <!--Post list page-->
         <?php elseif ($action === 'posts'): ?>
@@ -274,7 +279,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                     <a href="?action=show&id=<?= e($post['id']) ?>">
                         <h3><?= e($post['title']) ?></h3>
                     </a>
-                    <small><?= e($post['created_at']) ?></small>
+                    <small>
+                        Created at: <?= e($post['created_at']) ?>
+                        <?php if ($post['created_at'] !== $post['updated_at']): ?>
+                            | Updated at: <?= e($post['updated_at']) ?>
+                        <?php endif; ?>
+                    </small>
                 </article>
             <?php endforeach; ?>
         
@@ -295,7 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post'
                     <p><?= e($post['body']) ?></p>
                     <small>
                         Created at: <?= e($post['created_at']) ?>
-                        <?php if (e($post['created_at']) !== e($post['updated_at'])): ?>
+                        <?php if ($post['created_at'] !== $post['updated_at']): ?>
                             | Updated at: <?= e($post['updated_at']) ?>
                         <?php endif; ?>
                     </small>
