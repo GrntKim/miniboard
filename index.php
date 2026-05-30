@@ -8,6 +8,7 @@ $db->exec("pragma foreign_keys = on");
 $db->exec("
     create table if not exists posts ( 
         id integer primary key autoincrement,
+        author text not null,
         title text not null,
         body text not null,
         created_at text not null default current_timestamp,
@@ -193,32 +194,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
         }
 
         .content {
-            padding: 1em;
             flex: 1;
+            padding: 1em;
         }
 
-        .post-container {
+        .post-container,
+        .post-form,
+        .comments-section {
             max-width: 720px;
             margin: 3em auto;
             padding: 0 1em;
-            display: block;
         }
 
-        .post-container h2 {
+        .post-container h2,
+        .post-form h2,
+        .comments-section h2 {
             font-size: 2rem;
             line-height: 1.2;
-            margin-bottom: 0.4em;
+            margin-bottom: 1em;
         }
 
-        .post-container small {
+        .post-container small,
+        .comments-section small {
             display: block;
             color: #777;
             margin-bottom: 2em;
-        }
-
-        .post-form small {
-            display: block;
-            color: #777;
         }
 
         .post-container p {
@@ -233,35 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
             align-items: center;
             gap: 0.75em;
             margin-top: 2em;
-        }
-
-        .post-form {
-            max-width: 720px;
-            margin: 3em auto;
-            padding: 0 1em;
-        }
-
-        .post-form h2 {
-            font-size: 2rem;
-            line-height: 1.2;
-            margin-bottom: 1em;
-        }
-
-        .post-form form {
-            max-width: none;
-        }
-
-        .post-form input,
-        .post-form textarea {
-            width: 100%;
-        }
-
-        .post-form textarea {
-            min-height: 60vh;
-        }
-
-        .post-form .comment-text-area {
-            min-height: 10vh;
         }
 
         form {
@@ -280,6 +251,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
         textarea {
             min-height: 180px;
             resize: vertical;
+        }
+
+        .post-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.7rem;
+        }
+
+        .post-form form {
+            max-width: none;
+        }
+
+        .post-form input,
+        .post-form textarea {
+            width: 100%;
+        }
+
+        .post-form textarea {
+            min-height: 60vh;
+        }
+
+        .comment-form {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75em;
+            max-width: none;
+        }
+
+        .comment-form p {
+            flex: 1;
+        }
+
+        .comment-form .comment-text-area {
+            width: 100%;
+            min-height: 56px;
+        }
+
+        .comment-form button {
+            flex: 0 0 auto;
+        }
+
+        .comment-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.8em
+        }
+
+        .comment-block .content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid black;
+            border-radius: 5px;
+        }
+
+        .comment-block .infos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 0.8em;
         }
 
         article {
@@ -341,14 +375,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
             <?php endif; ?>
 
             <?php foreach ($posts as $post): ?>
-                <article>
-                    <a href="?action=show&id=<?= e($post['id']) ?>">
+                <article class="post-list-item">
+                    <a class="post-link" href="?action=show&id=<?= e($post['id']) ?>">
                         <h3><?= e($post['title']) ?></h3>
                     </a>
-                    <small>
-                        Created at: <?= e($post['created_at']) ?>
+                    <small class="infos">
+                        Created at: <?= e($post['created_at']) ?> <br>
                         <?php if ($post['created_at'] !== $post['updated_at']): ?>
-                            | Updated at: <?= e($post['updated_at']) ?>
+                            Updated at: <?= e($post['updated_at']) ?>
                         <?php endif; ?>
                     </small>
                 </article>
@@ -389,9 +423,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
             <?php endif; ?>
 
             <!--Comment form-->
-            <div class="post-form">
+            <div class="comments-section">
                 <h2>Comments</h2>
-                <form method="post">
+                <form class="comment-form" method="post">
                     <input type="hidden" name="action" value="create_comment">
                     <input type="hidden" name="post_id" value="<?= e($post['id']) ?>">
                     <p>
@@ -417,22 +451,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
             <?php endif; ?>
 
             <?php foreach ($comments as $comment): ?>
-                <article>
-                    <p><?= e($comment['body']) ?></p>
-                    <small>by <?= e($comment['author']) ?></small>
-                    <small>
-                        Created at: <?= e($comment['created_at']) ?>
-                        <?php if ($comment['created_at'] !== $comment['updated_at']): ?>
-                            | Updated at: <?= e($comment['updated_at']) ?>
-                        <?php endif; ?>
-                    </small>
-                    <button
-                        class="comment-delete-btn"
-                        data-id="<?= e($comment['id']) ?>"
-                        data-post-id="<?= e($comment['post_id']) ?>"
-                    >
-                        Delete
-                    </button>
+                <article class="comment-block">
+                    <p class="content"><?= e($comment['body']) ?></p>
+                    <div class="infos">
+                        <small>by <?= e($comment['author']) ?> <br><br>
+                            Created at: <?= e($comment['created_at']) ?>
+                            <?php if ($comment['created_at'] !== $comment['updated_at']): ?>
+                                | Updated at: <?= e($comment['updated_at']) ?>
+                            <?php endif; ?>
+                        </small>
+                        <button
+                            class="comment-delete-btn"
+                            data-id="<?= e($comment['id']) ?>"
+                            data-post-id="<?= e($comment['post_id']) ?>"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </article>
             <?php endforeach; ?>
             </div>
