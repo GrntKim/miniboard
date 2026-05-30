@@ -49,6 +49,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
     header('Location: ?action=posts');
     exit;
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'update_post')) {
+    $id = (int) ($_POST['id'] ?? 0);
+    $title = (string) ($_POST['title'] ?? '');
+    $body = (string) ($_POST['body'] ?? '');
+
+    if ($id > 0 && $title !== '' && $body !== '') {
+        $stmt = $db->prepare("
+            update posts 
+            set title = :title, body = :body
+            where id = :id
+        ");
+        $stmt->execute([
+            ':id' => $id,
+            ':title' => $title,
+            ':body' => $body]);
+    }
+
+    header("Location: ?action=show&id=" . $id);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -250,14 +271,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
                     <p><?= e($post['body']) ?></p>
                     <small><?= e($post['created_at']) ?></small>
                     <div class="post-actions">
-                        <a href="?action=posts">go back</a>
+                        <a href="?action=posts">Go back</a>
+                        <a href="?action=update&id=<?= e($post['id']) ?>">Update</a>
                         <button
                             class="post-delete-btn"
-                            data-id="<?= e($post['id']) ?>">
+                            data-id="<?= e($post['id']) ?>"
+                        >
                             Delete
                         </button>
                     </div>
                 </div>
+            <?php endif; ?>
+
+        <!--Post update page-->
+        <?php elseif ($action === 'update' && $id > 0): ?>
+            <?php
+            $stmt = $db->prepare("select * from posts where id = :id");
+            $stmt->execute([':id' => $id]);
+            $post = $stmt->fetch(PDO::FETCH_ASSOC);
+            ?>
+            <?php if (!$post): ?>
+                <h2>Post not found</h2>
+                <p><a href="?action=posts">go back</a></p>
+            <?php else: ?>
+                <h2>Update post</h2>
+                <form method="post">
+                    <input type="hidden" name="action" value="update_post">
+                    <input type="hidden" name="id" value="<?= e($post['id']) ?>">
+                    <p>
+                        <input type="text" name="title" value="<?= e($post['title']) ?>">
+                    </p>
+                    <p>
+                        <textarea name="body"><?= e($post['body']) ?></textarea>
+                    </p>
+
+                    <button type="submit">Save</button>
+                </form>
             <?php endif; ?>
 
         <!--Default page-->
@@ -272,10 +321,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_post'
         $(document).ready(() => {
             $(".post-delete-btn").on("click", function () {
                 if (!confirm("Delete this post?")) return;
-
                 $.post("/", {
                     action: "delete_post",
-                    id: $(this).data("id")
+                    id: $(this).data("id"),
                 }).done(() => {
                     location.href = "?action=posts";
                 })
