@@ -18,6 +18,7 @@ function e($value) {
 }
 
 $action = $_GET['action'] ?? 'home';
+$id = (int) ($_GET['id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create_post') {
     $title = trim($_POST['title'] ?? '');
@@ -36,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
         exit;
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -49,6 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
         crossorigin="anonymous">
     </script>
     <style>
+
+        @import url('https://googleapis.com');
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -60,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            font-family: 'Roboto', sans-serif;
         }
 
         ul {
@@ -162,11 +168,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 
             <?php foreach ($posts as $post): ?>
                 <article>
-                    <h3><?= e($post['title']) ?></h3>
-                    <p><?= nl2br(e($post['body'])) ?></p>
+                    <a href="?action=show&id=<?= e($post['id']) ?>">
+                        <h3><?= e($post['title']) ?></h3>
+                    </a>
                     <small><?= e($post['created_at']) ?></small>
                 </article>
             <?php endforeach; ?>
+        
+        <?php elseif ($action === 'show' && $id > 0): ?>
+            <?php
+            $stmt = $db->query("select * from posts where id = :id");
+            $stmt->execute([':id' => $id]);
+            $post = $stmt->fetch(PDO::FETCH_ASSOC);
+            ?>
+
+            <?php if (!$post): ?>
+                <h2>Post not found</h2>
+                <p><a href="?action=show">go back</a></p>
+            <?php else: ?>
+                <h2><?= e($post['title']) ?></h2>
+                <p><?= nl2br(e($post['body'])) ?></p>
+                <small><?= e($post['created_at']) ?></small>
+                <p><a href="?action=show">go back</a></p>
+            <?php endif; ?>
 
         <?php else: ?>
             <h1>WELCOME!</h1>
