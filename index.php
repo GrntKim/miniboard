@@ -42,9 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 
     if ($title !== '' && $body !== '') {
         $stmt = $db->prepare("
-            insert into posts (title, body) 
-            values (:title, :body)");
+            insert into posts (author, title, body) 
+            values (:author, :title, :body)");
         $stmt->execute([
+            ':author' => 'anonymous',
             ':title' => $title,
             ':body' => $body,
         ]);
@@ -215,6 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
         }
 
         .post-container small,
+        .post-list-item small,
         .comments-section small {
             display: block;
             color: #777;
@@ -380,10 +382,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
                         <h3><?= e($post['title']) ?></h3>
                     </a>
                     <small class="infos">
-                        Created at: <?= e($post['created_at']) ?> <br>
-                        <?php if ($post['created_at'] !== $post['updated_at']): ?>
-                            Updated at: <?= e($post['updated_at']) ?>
-                        <?php endif; ?>
+                            By: <?= e($post['author']) ?> <br><br>
+                            Created at: <?= e($post['created_at']) ?> <br>
+                            <?php if ($post['created_at'] !== $post['updated_at']): ?>
+                                Updated at: <?= e($post['updated_at']) ?>
+                            <?php endif; ?>
                     </small>
                 </article>
             <?php endforeach; ?>
@@ -402,6 +405,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] === 'delete_comme
             <?php else: ?>
                 <div class="post-container">
                     <h2><?= e($post['title']) ?></h2>
+                    <small>By: <?= e($post['author']) ?></small>
                     <p><?= e($post['body']) ?></p>
                     <small>
                         Created at: <?= e($post['created_at']) ?>
